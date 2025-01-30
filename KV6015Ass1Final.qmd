@@ -1,0 +1,573 @@
+---
+title: "KV6015 Asessment scripts"
+author: "Sam Swatman (W22008759)"
+format: html
+editor: visual
+---
+
+# KV6015 Asessment 1 - Sales Volume Analysis for Order Volume Prediction
+
+This document contains the scripts used to analyse and create models for the RSI data set
+
+## Import Dependencies
+
+```{r}
+#| output: false
+library(readxl)
+library(tidyverse) 
+library(plotly) 
+library(cowplot) 
+```
+
+## Importing the dataset
+
+```{r}
+#| output: false
+# Monthly Intervals
+RSI_M <- read_excel("./mainreferencetables.xlsx",sheet = "Table 3 M")
+# Yearly Intervals
+RSI_A <- read_excel("./mainreferencetables.xlsx",sheet = "Table 3 A")
+```
+
+## Processing Dataset
+
+```{r}
+#| output: false
+# Load Columns
+RSI_M_FoodStoreAll <- as.numeric(RSI_M$...8[10:441])
+RSI_M_FoodStoreAll_Complete <- as.numeric(RSI_M$...8[10:452])
+RSI_A_FoodStoreAll <- as.numeric(RSI_A$...8[10:45])
+
+# utilities for year data
+RSI_A_Bound <- 1:36
+RSI_A_StartYear <- 1988
+RSI_A_Years <- 1988:2023
+RSI_A_DateList = seq(as.Date("1988/01/01"),as.Date("2023/01/01"),"years")
+# utilities for month data
+RSI_M_Bound <- 1:432
+RSI_M_DateList = seq(as.Date("1988/01/01"),as.Date("2023/12/31"),"month")
+RSI_M_Months <- RSI_M$`3M - CHAINED VOLUME OF RETAIL SALES  NON-SEASONALLY ADJUSTED, Index numbers of sales per week and percentage increase on a year earlier, SIC 2007`[10:441]
+RSI_M_MonthStr <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+RSI_M_DataByYear <- matrix(RSI_M_FoodStoreAll,12)
+
+```
+
+## Convert into Tibble Data Frames
+
+```{r}
+
+
+RSI_A_FoodStoreAll_DF <- as_tibble(data.frame(
+  A_Dates = RSI_A_DateList,
+  A_Sales_Volume = c(RSI_A_FoodStoreAll)
+))
+# Years Repeated for each month
+RSI_AM_FoodStoreAll_V <- c()
+for (i  in RSI_A_FoodStoreAll <- as.numeric(RSI_A$...8[10:45]))
+{
+  RSI_AM_FoodStoreAll_V <- c(RSI_AM_FoodStoreAll_V,i,i,i,i,i,i,i,i,i,i,i,i)
+}
+
+RSI_M_FoodStoreAll_DF <- as_tibble(data.frame(
+  M_Dates = RSI_M_DateList,
+  M_Sales_Volume = c(RSI_M_FoodStoreAll)
+))
+
+# there are better ways of doing this
+RSI_AM_FoodStoreAllByYear <- as_tibble(data.frame(
+  Month = RSI_M_MonthStr,
+  y1988 = RSI_M_DataByYear[,1],
+  y1989 = RSI_M_DataByYear[,2],
+  y1990 = RSI_M_DataByYear[,3],
+  y1991 = RSI_M_DataByYear[,4],
+  y1992 = RSI_M_DataByYear[,5],
+  y1993 = RSI_M_DataByYear[,6],
+  y1994 = RSI_M_DataByYear[,7],
+  y1995 = RSI_M_DataByYear[,8],
+  y1996 = RSI_M_DataByYear[,9],
+  y1997 = RSI_M_DataByYear[,10],
+  y1998 = RSI_M_DataByYear[,11],
+  y1999 = RSI_M_DataByYear[,12],
+  y2000 = RSI_M_DataByYear[,13],
+  y2001 = RSI_M_DataByYear[,14],
+  y2002 = RSI_M_DataByYear[,15],
+  y2003 = RSI_M_DataByYear[,16],
+  y2004 = RSI_M_DataByYear[,17],
+  y2005 = RSI_M_DataByYear[,18],
+  y2006 = RSI_M_DataByYear[,19],
+  y2007 = RSI_M_DataByYear[,20],
+  y2008 = RSI_M_DataByYear[,21],
+  y2009 = RSI_M_DataByYear[,22],
+  y2010 = RSI_M_DataByYear[,23],
+  y2011 = RSI_M_DataByYear[,24],
+  y2012 = RSI_M_DataByYear[,25],
+  y2013 = RSI_M_DataByYear[,26],
+  y2014 = RSI_M_DataByYear[,27],
+  y2015 = RSI_M_DataByYear[,28],
+  y2016 = RSI_M_DataByYear[,29],
+  y2017 = RSI_M_DataByYear[,30],
+  y2018 = RSI_M_DataByYear[,31],
+  y2019 = RSI_M_DataByYear[,32],
+  y2020 = RSI_M_DataByYear[,33],
+  y2021 = RSI_M_DataByYear[,34],
+  y2022 = RSI_M_DataByYear[,35],
+  y2023 = RSI_M_DataByYear[,36]
+))
+
+# there are MUCH better ways of doing this
+RSI_AM_FoodStoreAllByMonth <- as_tibble(data.frame(
+  Years = RSI_A_Years,
+  Jan = RSI_M_DataByYear[1,],
+  Feb = RSI_M_DataByYear[2,],
+  Mar = RSI_M_DataByYear[3,],
+  Apr = RSI_M_DataByYear[4,],
+  May = RSI_M_DataByYear[5,],
+  Jun = RSI_M_DataByYear[6,],
+  Jul = RSI_M_DataByYear[7,],
+  Aug = RSI_M_DataByYear[8,],
+  Sep = RSI_M_DataByYear[9,],
+  Oct = RSI_M_DataByYear[10,],
+  Nov = RSI_M_DataByYear[11,],
+  Dec = RSI_M_DataByYear[12,]
+))
+
+```
+
+## Plot Dataset
+
+```{r}
+tibble::tibble(Dates  = RSI_A_FoodStoreAll_DF$A_Dates, Volume  = RSI_A_FoodStoreAll_DF$A_Sales_Volume) %>%
+  
+  ggplot2::ggplot(aes(x = Dates, y = Volume)) + 
+  geom_line(colour = 'red') +
+  xlab('Date') + 
+  ylab('Sales Volume (Index = 2022)') +
+  ggtitle("RSI - Predominantly Food Store ALL (Yearly)") +
+  theme_minimal()
+
+tibble::tibble(Dates  = RSI_M_FoodStoreAll_DF$M_Dates, Volume  = RSI_M_FoodStoreAll_DF$M_Sales_Volume) %>%
+  
+  ggplot2::ggplot(aes(x = Dates, y = Volume)) + 
+  geom_line(colour = 'red') +
+  xlab('Date') + 
+  ylab('Sales Volume (Index = 2022)') +
+  ggtitle("RSI - Predominantly Food Store ALL (Monthly)") +
+  theme_minimal()
+
+tibble::tibble(Dates  = RSI_M_FoodStoreAll_DF$M_Dates, Volume  = RSI_M_FoodStoreAll_DF$M_Sales_Volume, Volume2 = RSI_AM_FoodStoreAll_V) %>%
+  
+  ggplot2::ggplot(aes(x = Dates)) + 
+  geom_line(colour = 'red',aes(y = Volume )) +
+  
+  geom_line(colour = 'blue',aes(y = Volume2)) +
+  guides(colour = guide_legend()) +
+  xlab('Date') + 
+  ylab('Sales Volume (Index = 2022)') +
+  ggtitle("RSI - Predominantly Food Store ALL (Monthly & Yearly)") +
+  theme_minimal()
+
+tibble::tibble(Dates  = RSI_M_FoodStoreAll_DF$M_Dates[217:432], Volume  = RSI_M_FoodStoreAll_DF$M_Sales_Volume[217:432], Volume2 = RSI_AM_FoodStoreAll_V[217:432]) %>%
+  
+  ggplot2::ggplot(aes(x = Dates)) + 
+  geom_line(colour = 'red',aes(y = Volume )) +
+  
+  geom_line(colour = 'blue',aes(y = Volume2)) +
+  guides(colour = guide_legend()) +
+  xlab('Date') + 
+  ylab('Sales Volume (Index = 2022)') +
+  ggtitle("RSI - Predominantly Food Store ALL From 2006 (Monthly & Yearly)") +
+  theme_minimal()
+
+
+
+tibble::tibble(Data = RSI_AM_FoodStoreAllByMonth, Years = RSI_A_DateList) %>%
+  
+  ggplot2::ggplot(aes(x = Years)) + 
+    geom_line(colour = 'red',aes(y = Data$Jan )) +
+    geom_line(colour = 'blue',aes(y = Data$Feb )) +
+    geom_line(colour = 'pink',aes(y = Data$Mar )) +
+    geom_line(colour = 'purple',aes(y = Data$Apr )) +
+    geom_line(colour = 'green',aes(y = Data$May )) +
+    geom_line(colour = 'yellow',aes(y = Data$Jun )) +
+    geom_line(colour = 'magenta',aes(y = Data$Jul )) +
+    geom_line(colour = 'seagreen',aes(y = Data$Aug )) +
+    geom_line(colour = 'orange',aes(y = Data$Sep )) +
+    geom_line(colour = 'aquamarine',aes(y = Data$Oct )) +
+    geom_line(colour = 'sienna',aes(y = Data$Nov )) +
+    geom_line(colour = 'maroon',aes(y = Data$Dec )) +
+  
+  xlab('Date') + 
+  ylab('Sales Volume (Index = 2022)') +
+  ggtitle("RSI - Predominantly Food Store ALL Monthly Volume by year") +
+  theme_minimal()
+```
+
+## Calculate Rolling 12 month average
+
+```{r}
+# Not terribly efficient but works :)
+RSI_M_12MAV <- c()
+for (i in RSI_M_Bound[12:432])
+{
+  temp <- (RSI_M_FoodStoreAll[i-12]+RSI_M_FoodStoreAll[i-1]+RSI_M_FoodStoreAll[i-2]+RSI_M_FoodStoreAll[i-3]+RSI_M_FoodStoreAll[i-4]+RSI_M_FoodStoreAll[i-5]+RSI_M_FoodStoreAll[i-6]+RSI_M_FoodStoreAll[i-7]+RSI_M_FoodStoreAll[i-8]+RSI_M_FoodStoreAll[i-9]+RSI_M_FoodStoreAll[i-10]+RSI_M_FoodStoreAll[i-11])/12
+  RSI_M_12MAV <- c(RSI_M_12MAV,temp)
+}
+# Values Nonexistent Pre 1988 So repeated value from June 1989
+RSI_M_12MAV <- c(RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV[1],RSI_M_12MAV)
+# Plot the 12 - Month Average
+df <- tibble::tibble(Dates  = RSI_M_FoodStoreAll_DF$M_Dates, Volume  = RSI_M_12MAV) 
+  
+plot1 <- ggplot2::ggplot(df,aes(x = Dates, y = Volume)) + 
+  geom_line(colour = 'red') + 
+  xlab('Date') + 
+  ylab('Sales Volume (Index = 2022)') +
+  ggtitle("RSI - Predominantly Food Store ALL Plotted 12 Month Average") +
+  theme_minimal()
+
+df <- tibble::tibble(A = RSI_M_FoodStoreAll,M1 = RSI_M_12MAV, dates = RSI_M_DateList)
+  
+plot2 <-  ggplot2::ggplot(df,aes(x = dates)) + 
+  geom_line(colour = 'red',aes(y = A)) +
+  geom_line(colour = 'blue',aes(y = M1)) +
+  
+  xlab('Date') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - 12 month average vs actual") +
+  theme_minimal()
+df <- tibble::tibble(A = RSI_M_FoodStoreAll,M1 = RSI_M_12MAV, dates = RSI_M_DateList)
+  
+plot3 <-  ggplot2::ggplot(df,aes(x = A)) + 
+  geom_line(colour = 'red',aes(y = A)) +
+  geom_line(colour = 'blue',aes(y = M1)) +
+  
+  xlab('Actual Value') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - 12 month average vs actual") +
+  theme_minimal()
+ggplotly(plot1)
+ggplotly(plot2)
+ggplotly(plot3)
+```
+
+## The 12 Month Rolling Average Is Related to the actual values
+```{R}
+ans <- lm(formula = RSI_M_FoodStoreAll ~ RSI_M_12MAV)
+summary(ans)
+```
+## Monthly Deviation
+```{r}
+MonthlyDeviation <- (RSI_M_FoodStoreAll - RSI_M_12MAV)/RSI_M_12MAV
+df <- data.frame(
+  years = RSI_A_DateList,
+  Jan = MonthlyDeviation[seq(1,432,12)],
+  Feb = MonthlyDeviation[seq(2,432,12)],
+  Mar = MonthlyDeviation[seq(3,432,12)],
+  May = MonthlyDeviation[seq(4,432,12)],
+  Apr = MonthlyDeviation[seq(5,432,12)],
+  Jun = MonthlyDeviation[seq(6,432,12)],
+  Jul = MonthlyDeviation[seq(7,432,12)],
+  Aug = MonthlyDeviation[seq(8,432,12)],
+  Sep = MonthlyDeviation[seq(9,432,12)],
+  Oct = MonthlyDeviation[seq(10,432,12)],
+  Nov = MonthlyDeviation[seq(11,432,12)],
+  Dec = MonthlyDeviation[seq(12,432,12)]
+)
+plot <-  ggplot2::ggplot(df,aes(x = years)) + 
+  geom_line(colour = 'red',aes(y = Jan )) +
+  geom_line(colour = 'blue',aes(y = Feb )) +
+  geom_line(colour = 'pink',aes(y = Mar )) +
+  geom_line(colour = 'purple',aes(y = Apr )) +
+  geom_line(colour = 'green',aes(y = May )) +
+  geom_line(colour = 'yellow',aes(y = Jun )) +
+  geom_line(colour = 'magenta',aes(y = Jul )) +
+  geom_line(colour = 'seagreen',aes(y = Aug )) +
+  geom_line(colour = 'orange',aes(y = Sep )) +
+  geom_line(colour = 'aquamarine',aes(y = Oct )) +
+  geom_line(colour = 'sienna',aes(y = Nov )) +
+  geom_line(colour = 'maroon',aes(y = Dec )) +
+  xlab('Actual Value') + 
+  ylab('Deviaion ') +
+  ggtitle("RSI - Deviation Per Month") +
+  theme_minimal()
+
+ggplotly(plot)
+```
+
+## Total Monthly Deviation
+
+```{r}
+Dev_M <- c(0,0,0,0,0,0,0,0,0,0,0,0)
+
+count <- 1
+for (data in RSI_M_Bound)
+{
+  PercentageDifference <- ((RSI_M_FoodStoreAll[data]/RSI_M_12MAV[data])*100) - 100
+
+  Dev_M[count] <- (Dev_M[count] + PercentageDifference)/2 
+  # Average Monthly Deviation from previous 12 month average 
+  count <- (count %% 12) + 1
+}
+
+tibble::tibble(Dates  = 1:12, Volume  = Dev_M) %>%
+  
+  ggplot2::ggplot(aes(x = Dates, y = Volume)) + 
+  geom_line(colour = 'red') +
+  xlab('Month Index') + 
+  ylab('Deviation from 12M average %') +
+  ggtitle("RSI - Average Monthly percentage deviation from previous 12-Month Average") +
+  theme_minimal()
+
+```
+
+## Plot Showing volume Adjusted for Monthly Deviation average and previous 12 month Average
+
+```{r}
+# Values for 1988 will probably be slightly
+
+RSI_M_NORMALISED <- c()
+RSI_M_YEARNORM <- c()
+RSI_M_PredAccuracy <- c()
+count <- 1
+for (i in RSI_M_Bound)
+{
+  Prediction <- (RSI_M_12MAV[i] + (RSI_M_12MAV[i] * (Dev_M[count] / 100 )))
+  Actual <- RSI_M_FoodStoreAll[i]
+  # Difference between prediction and actual
+  RSI_M_NORMALISED <- c(RSI_M_NORMALISED,(Prediction - Actual))
+  
+  # Percentage Accuracy of prediction
+  RSI_M_PredAccuracy <- c(RSI_M_PredAccuracy,((Prediction - Actual)/Actual)*100)
+  
+  # Difference between actual and 12 month average
+  RSI_M_YEARNORM <- c(RSI_M_YEARNORM,(RSI_M_FoodStoreAll[i] - RSI_M_12MAV[i]))
+  count <- (count %% 12) + 1 
+  # i could do count with i but this looks nicer
+}
+tibble::tibble(Dates  = RSI_M_DateList, Volume  = RSI_M_NORMALISED) %>%
+  
+  ggplot2::ggplot(aes(x = Dates)) + 
+  geom_line(colour = 'red',aes(y = Volume)) +
+  xlab('Dates') + 
+  ylab('Prediction Accuracy') +
+  ggtitle("RSI -  Difference between prediction and actual value") +
+  theme_minimal()
+tibble::tibble(Dates  = RSI_M_DateList, Volume  = RSI_M_YEARNORM) %>%
+  
+  ggplot2::ggplot(aes(x = Dates)) + 
+  geom_line(colour = 'blue',aes(y = Volume)) +
+  xlab('Dates') + 
+  ylab('Prediction Accuracy') +
+  ggtitle("RSI - Difference between Actual and 12 month average") +
+  theme_minimal()
+
+tibble::tibble(Dates  = RSI_M_DateList, Volume  = RSI_M_PredAccuracy) %>%
+  
+  ggplot2::ggplot(aes(x = Dates)) + 
+  geom_line(colour = 'green',aes(y = Volume)) +
+  xlab('Dates') + 
+  ylab('Prediction Accuracy') +
+  ggtitle("RSI - Prediction Accuracy Percentage") +
+  theme_minimal()
+
+tibble::tibble(Dates  = RSI_M_DateList, Volume1  = RSI_M_NORMALISED ,Volume2  = RSI_M_YEARNORM ,  Volume3  = RSI_M_PredAccuracy) %>%
+  
+  ggplot2::ggplot(aes(x = Dates)) + 
+  geom_line(colour = 'red',aes(y = Volume1)) +
+  geom_line(colour = 'blue',aes(y = Volume2)) +
+   geom_line(colour = 'green',aes(y = Volume3)) + # Values are all pretty close to 100 anyway so percentage doesn't change much 
+  xlab('Dates') + 
+  ylab('Prediction Accuracy') +
+  ggtitle("RSI - Prediction Accuracy") +
+  theme_minimal()
+```
+
+## Prediction Function Definition
+
+```{r}
+
+model1Predict <- function(index)
+{
+  start<-index-12
+  Month <-( (index - 1) %% 12) + 1
+  Average <- mean(RSI_M_FoodStoreAll_Complete[seq(start,start+11)])
+  Prediction <- (Average + (Average * (Dev_M[Month] / 100 )))
+  return(Prediction)
+}
+
+get12MonthAv <- function(index)
+{
+  
+  #cat("Index:",index)
+  start <- index - 12
+  #cat("Start:",start)
+  return( mean(RSI_M_FoodStoreAll_Complete[seq(start,start+11)]) )
+}
+```
+
+## Linear Model Method Definition
+```{r}
+LinearModel1Predict <- function(index)
+{
+  
+  Month <-( (index - 1) %% 12) + 1
+  #cat("Index:",index," Month:",Month)
+  M_Model <- summary(lm(RSI_M_FoodStoreAll[seq(Month + 12,432, by = 12)] ~ map_dbl(.x = seq(Month + 12,432, by = 12),.f = function(x) get12MonthAv(x)) ))
+  MonthInter <- M_Model$coefficients[1,1]
+  MonthCo <- M_Model$coefficients[2,1]
+  Model_P <- (get12MonthAv(index)*MonthCo) + MonthInter
+  LinearModelPrediction = (get12MonthAv(index)*MonthCo) + MonthInter
+  return(LinearModelPrediction)
+}
+```
+
+## Calculate Metrics
+```{r}
+bound <- 13:432
+Model1Predictions_All <- (map_dbl(.x =  bound,.f = function(x) model1Predict(x)))
+LinearModelPredictions_All <- (map_dbl(.x =  bound,.f = function(x) LinearModel1Predict(x)))
+AV <- (map_dbl(.x =  bound,.f = function(x) get12MonthAv(x)))
+
+Model1MAE <-  mean(abs(RSI_M_FoodStoreAll[13:432] - Model1Predictions_All))
+Model1MSE <-  mean((RSI_M_FoodStoreAll[13:432] - Model1Predictions_All)^2)
+Model1RMSE <- sqrt(Model1MSE)
+Model1Residuals <- RSI_M_FoodStoreAll[13:432] - Model1Predictions_All
+
+LinearModelMAE <-  mean(abs(RSI_M_FoodStoreAll[13:432] - LinearModelPredictions_All))
+LinearModelMSE <-  mean((RSI_M_FoodStoreAll[13:432] - LinearModelPredictions_All)^2)
+LinearModelRMSE <- sqrt(LinearModelMSE)
+LinearModelResiduals <- RSI_M_FoodStoreAll[13:432] - LinearModelPredictions_All
+
+cat("Model 1 -\t\t MAE:", Model1MAE, "MSE:", Model1MSE, "RMSE:", Model1RMSE, "\n")
+cat("Linear Model 1 -\t MAE:", LinearModelMAE, "MSE:", LinearModelMSE, "RMSE:", LinearModelRMSE, "\n")
+
+df <- tibble::tibble(A = RSI_M_FoodStoreAll[13:432],M1 = Model1Predictions_All, M2 = LinearModelPredictions_All, dates = RSI_M_DateList[13:432], av = AV)
+  
+plot1 <-  ggplot2::ggplot(df,aes(x = dates)) + 
+  geom_line(colour = 'red',aes(y = M1)) +
+  geom_line(colour = 'blue',aes(y = M2)) +
+  geom_line(colour = 'green', aes(y=av)) +
+  geom_line(colour = 'black',aes(y = A),alpha = 0.5) +
+  xlab('Actual Value') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - Model Prediction vs 12 Month Prediction vs Actual") +
+  theme_minimal()
+
+df <- tibble::tibble(A = RSI_M_FoodStoreAll[13:432],M1 = Model1Residuals, M2 = LinearModelResiduals, dates = RSI_M_DateList[13:432])
+  
+plot2 <-  ggplot2::ggplot(df,aes(x = dates)) + 
+  geom_line(colour = 'red',aes(y = M1)) +
+  geom_line(colour = 'blue',aes(y = M2)) +
+  
+  xlab('Actual Value') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - Model Prediction vs 12 Month Prediction Residuals") +
+  theme_minimal()
+
+df <- tibble::tibble(A = RSI_M_FoodStoreAll[13:432],M1 = Model1Predictions_All, M2 = LinearModelPredictions_All, dates = RSI_M_DateList[13:432]) 
+  
+plot3 <-  ggplot2::ggplot(df,aes(x = A)) + 
+  geom_line(colour = 'red',aes(y = M1)) +
+  geom_line(colour = 'blue',aes(y = M2)) +
+  geom_line(colour = 'black',aes(y = A)) +
+  xlab('Actual Value') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - Model Prediction vs 12 Month Prediction vs Actual") +
+  theme_minimal()
+ggplotly(plot1)
+ggplotly(plot2)
+ggplotly(plot3)
+```
+## Re-Callibrate Model
+```{R}
+Dev_M2 <- Dev_M - mean(Dev_M) +1
+model2Predict <- function(index)
+{
+  start<-index-12
+  Month <-( (index - 1) %% 12) + 1
+  Average <- mean(RSI_M_FoodStoreAll_Complete[seq(start,start+11)])
+  Prediction <- (Average + (Average * (Dev_M2[Month] / 100 )))
+}
+```
+## Re-Plot
+```{R}
+Model2Predictions_All <- (map_dbl(.x =  bound,.f = function(x) model2Predict(x)))
+
+Model2MAE <-  mean(abs(RSI_M_FoodStoreAll[13:432] - Model2Predictions_All))
+Model2MSE <-  mean((RSI_M_FoodStoreAll[13:432] - Model2Predictions_All)^2)
+Model2RMSE <- sqrt(Model2MSE)
+Model2Residuals <- RSI_M_FoodStoreAll[13:432] - Model2Predictions_All
+
+cat("Model 1 -\t\t MAE:", Model1MAE, "MSE:", Model1MSE, "RMSE:", Model1RMSE, "\n")
+cat("Linear Model 1 -\t MAE:", LinearModelMAE, "MSE:", LinearModelMSE, "RMSE:", LinearModelRMSE, "\n")
+cat("Model 2 -\t\t MAE:", Model2MAE, "MSE:", Model2MSE, "RMSE:", Model2RMSE, "\n")
+
+df <- tibble::tibble(A = RSI_M_FoodStoreAll[13:432],M1 = Model1Predictions_All, M2 = LinearModelPredictions_All, dates = RSI_M_DateList[13:432],M3 = Model2Predictions_All, av = AV)
+  
+plot1 <-  ggplot2::ggplot(df,aes(x = dates)) + 
+  geom_line(colour = 'red',aes(y = M1)) +
+  geom_line(colour = 'blue',aes(y = M2)) +
+  geom_line(colour = 'purple',aes(y = M3)) +
+  geom_line(colour = 'green', aes(y=av)) +
+  geom_line(colour = 'black',aes(y = A)) +
+  xlab('Actual Value') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - Model Prediction vs 12 Month Prediction vs Actual") +
+  theme_minimal()
+
+df <- tibble::tibble(A = RSI_M_FoodStoreAll[13:432],M1 = Model1Residuals,M3 = Model2Residuals, M2 = LinearModelResiduals, dates = RSI_M_DateList[13:432])
+  
+plot2 <-  ggplot2::ggplot(df,aes(x = dates)) + 
+  geom_line(colour = 'red',aes(y = M1)) +
+  geom_line(colour = 'purple',aes(y = M3)) +
+  geom_line(colour = 'blue',aes(y = M2)) +
+  
+  xlab('Actual Value') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - Model Prediction vs 12 Month Prediction Residuals") +
+  theme_minimal()
+
+df <- tibble::tibble(A = RSI_M_FoodStoreAll[13:432],M1 = Model1Predictions_All,M3 = Model2Predictions_All, M2 = LinearModelPredictions_All, dates = RSI_M_DateList[13:432]) 
+  
+plot3 <-  ggplot2::ggplot(df,aes(x = A)) + 
+  geom_line(colour = 'red',aes(y = M1)) +
+  geom_line(colour = 'blue',aes(y = M2)) +
+  geom_line(colour = 'purple',aes(y = M3)) +
+  geom_line(colour = 'black',aes(y = A)) +
+  xlab('Actual Value') + 
+  ylab('Predicted Value') +
+  ggtitle("RSI - Model Prediction vs 12 Month Prediction vs Actual") +
+  theme_minimal()
+ggplotly(plot1)
+ggplotly(plot2)
+ggplotly(plot3)
+```
+
+```{R}
+Model1Accuracy <- 100 * (Model1Residuals / RSI_M_FoodStoreAll[13:432])
+Model2Accuracy <- 100 * (Model2Residuals / RSI_M_FoodStoreAll[13:432])
+LinearModelAccuracy <- 100 * (LinearModelResiduals / RSI_M_FoodStoreAll[13:432])
+df <- tibble::tibble(Accuracy1 = Model1Accuracy, Accuracy2 = LinearModelAccuracy , Accuracy3 = Model2Accuracy) 
+
+plot <-  ggplot2::ggplot(df) + 
+  geom_histogram(aes(x = Accuracy1 ,y = after_stat(density)), colour = "maroon", fill = "red",alpha = 0.5) +
+  geom_histogram(aes(x = Accuracy2 ,y = after_stat(density)),colour = "aquamarine", fill = "blue",alpha = 0.5) +
+  geom_histogram(aes(x = Accuracy3 ,y = after_stat(density)),colour = "magenta", fill = "purple",alpha = 0.5) +
+  xlab('Accuracy') + 
+  ylab('Density') +
+  ggtitle("Distribution of prediction accuracy") +
+  theme_minimal()
+ggplotly(plot)
+```
+## Linear Models For Evaluation
+
+```{r}
+
+cat("Model 1 -\t\t MAE:", Model1MAE, "MSE:", Model1MSE, "RMSE:", Model1RMSE, "\n")
+summary(lm(Model1Predictions_All ~ RSI_M_FoodStoreAll[13:432]))
+
+cat("Linear Model 1 -\t MAE:", LinearModelMAE, "MSE:", LinearModelMSE, "RMSE:", LinearModelRMSE, "\n")
+summary(lm(LinearModelPredictions_All ~ RSI_M_FoodStoreAll[13:432]))
+
+cat("Model 2 -\t\t MAE:", Model2MAE, "MSE:", Model2MSE, "RMSE:", Model2RMSE, "\n")
+summary(lm(Model2Predictions_All ~ RSI_M_FoodStoreAll[13:432]))
+```
