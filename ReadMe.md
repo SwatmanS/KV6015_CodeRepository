@@ -15,4 +15,7 @@ Contains the dataset which was used for the analysis.
 (Table 3 A & Table 3 M)
 
 ## ./Old_Code
-Older version of the script document with scripts which were mot used in  the final analysis.
+Older version of the script document with scripts which were not used in the final analysis.
+
+## Running the code
+Should just work after cloning the repos and opening KV6015Ass1Final.qmd using RStudio and R 4.4.2
